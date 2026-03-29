@@ -1,0 +1,34 @@
+<div class="cities-counter">{{ savedCities.length }} / {{ maxCities }} cities saved</div>
+<div class="progress-bar">
+  <div class="progress-fill" [style.width.%]="(savedCities.length / maxCities) * 100"></div>
+</div>
+<div class="cities-list">
+  @if (savedCities.length === 0) {
+    <div class="empty-state">
+      <div class="empty-icon">🏙️</div>
+      <div class="empty-text">No cities saved yet.<br>Search and save a city above.</div>
+    </div>
+  } @else {
+    @for (city of savedCities; track city.cityName; let index = $index) {
+      <div class="city-item" [ngClass]="{'selected': selectedCity?.cityName === city.cityName, 'loading-card': city.isLoading}" (click)="onSelect(city)">
+        <div class="city-icon">{{ city.icon }}</div>
+        <div class="city-info">
+          <div class="city-name">{{ city.cityName }}, {{ city.country }}</div>
+          <div class="city-desc">{{ city.description }}</div>
+          @if (city.hasError) {
+            <div class="city-error-strip">⚠ {{ city.errorMsg }}</div>
+          }
+        </div>
+        <div class="city-temp">{{ city.temp }}°</div>
+        <div class="city-actions" (click)="$event.stopPropagation()">
+          @if (city.isLoading) {
+            <div class="spinner"></div>
+          } @else {
+            <button class="btn btn-ghost btn-sm" (click)="onRefresh(index, $event)">🔄</button>
+          }
+          <button class="btn btn-danger btn-sm" (click)="onRemove(index, $event)">✕</button>
+        </div>
+      </div>
+    }
+  }
+</div>

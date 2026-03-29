@@ -1,0 +1,15 @@
+<div class="search-wrap">
+  <input class="search-input" [(ngModel)]="cityName" (keydown)="onKeyDown($event)" type="text" placeholder="Enter city name..." maxlength="60" [disabled]="isSearching" />
+  <button class="btn btn-primary" (click)="onSearch()" [disabled]="isSearching">
+    @if (isSearching) {
+      <span class="spinner"></span> Searching…
+    } @else {
+      <span id="search-btn-icon">🔍</span> Search
+    }
+  </button>
+</div>
+@if (searchMsg) {
+  <div class="search-msg msg-{{searchMsg.type}}">
+    {{ searchMsg.text }}
+  </div>
+}

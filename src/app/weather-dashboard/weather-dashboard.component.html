@@ -1,0 +1,318 @@
+<header class="header">
+  <div class="logo">
+    <span class="logo-icon">🌤</span>
+    <div>
+      <div class="logo-text">WeatherScope</div>
+      <div class="logo-sub">Live Weather Intelligence</div>
+    </div>
+  </div>
+  <div class="header-meta">
+    <div class="live-badge">
+      <span class="live-dot"></span>
+      <span id="header-time">{{ timeNow }}</span>
+    </div>
+    <span class="tag" [ngClass]="hasApiKey ? 'tag-blue' : 'tag-yellow'" id="api-status">
+      {{ hasApiKey ? '⚡ API Ready' : '🎭 Demo Mode' }}
+    </span>
+  </div>
+</header>
+
+<nav class="nav-tabs">
+  <button class="tab" [class.active]="activeTab === 'dashboard'" (click)="showPage('dashboard')">
+    🌍 Dashboard
+  </button>
+  <button class="tab" [class.active]="activeTab === 'compare'" (click)="showPage('compare')">
+    ⚖ Compare
+  </button>
+  <button class="tab" [class.active]="activeTab === 'log'" (click)="showPage('log')">
+    📋 Activity Log
+  </button>
+</nav>
+
+<main class="main">
+  <div class="page" [class.active]="activeTab === 'dashboard'">
+    <div class="dash-grid">
+      <div class="col-left">
+        <div class="card">
+          <div class="card-title"><span class="dot"></span> SEARCH CITY</div>
+
+          <app-city-search
+            [isSearching]="isSearching"
+            [searchMsg]="searchMsg"
+            (search)="onSearchCity($event)"
+          >
+          </app-city-search>
+
+          <app-weather-card
+            [weather]="selectedCity"
+            mode="preview"
+            [isSaved]="true"
+            [showActions]="false"
+          >
+          </app-weather-card>
+        </div>
+
+        <div class="card" style="flex: 1">
+          <div class="card-title">
+            <span class="dot" style="background: var(--accent3)"></span> SAVED CITIES
+          </div>
+          <app-saved-cities
+            [savedCities]="savedCities"
+            [selectedCity]="selectedCity"
+            [maxCities]="maxCities"
+            (selectCity)="onCitySelected($event)"
+            (removeCity)="onCityRemoved($event)"
+            (refreshCity)="refreshCity($event)"
+          >
+          </app-saved-cities>
+        </div>
+      </div>
+
+      <div class="col-right">
+        <div class="card detail-panel" id="detail-card">
+          <div class="card-title">
+            <span class="dot" style="background: var(--accent2)"></span> WEATHER DETAILS
+          </div>
+          <app-weather-card
+            [weather]="searchResult || selectedCity"
+            mode="detail"
+            [isSaved]="
+              searchResult ? isCitySaved(searchResult.cityName) : selectedCity ? true : false
+            "
+            [showActions]="searchResult ? true : false"
+            (save)="onSaveCity()"
+          >
+          </app-weather-card>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page" [class.active]="activeTab === 'compare'">
+    <div class="compare-page">
+      <div class="card">
+        <div class="card-title">
+          <span class="dot" style="background: var(--accent2)"></span> WEATHER COMPARISON
+        </div>
+        @if (savedCities.length < 2) {
+          <div class="compare-empty">
+            <div class="big-icon">⚖</div>
+            <div>Save at least <strong>2 cities</strong> to use the comparison feature.</div>
+          </div>
+        } @else {
+          <div>
+            <div class="compare-selectors">
+              <select
+                class="city-select"
+                [(ngModel)]="compareCity1"
+                (ngModelChange)="onCompareCityChange()"
+              >
+                <option value="">— Select City 1 —</option>
+                @for (city of savedCities; track city.cityName) {
+                  <option [value]="city.cityName">{{ city.cityName }}, {{ city.country }}</option>
+                }
+              </select>
+              <div class="compare-vs">VS</div>
+              <select
+                class="city-select"
+                [(ngModel)]="compareCity2"
+                (ngModelChange)="onCompareCityChange()"
+              >
+                <option value="">— Select City 2 —</option>
+                @for (city of savedCities; track city.cityName) {
+                  <option [value]="city.cityName">{{ city.cityName }}, {{ city.country }}</option>
+                }
+              </select>
+            </div>
+            <div style="margin-top: 14px; display: flex; justify-content: flex-end">
+              <button
+                class="btn btn-primary"
+                (click)="triggerComparisonLog()"
+                [disabled]="!canCompare"
+              >
+                ⚡ Compare Now
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+
+      @if (comparisonResult) {
+        <div class="card compare-card">
+          <div class="card-title">
+            <span class="dot" style="background: var(--accent2)"></span> COMPARISON RESULT
+          </div>
+          <div class="compare-grid">
+            <div class="compare-city-col">
+              <div class="compare-city-name">
+                {{ comparisonResult.c1.icon }} {{ comparisonResult.c1.cityName }}
+              </div>
+              <div
+                class="compare-temp-val"
+                [style.color]="
+                  comparisonResult.c1.temp >= comparisonResult.c2.temp
+                    ? 'var(--accent)'
+                    : 'var(--text2)'
+                "
+              >
+                {{ comparisonResult.c1.temp }}°C
+              </div>
+              <div
+                style="
+                  font-size: 0.8rem;
+                  color: var(--text2);
+                  text-transform: capitalize;
+                  margin-top: 4px;
+                "
+              >
+                {{ comparisonResult.c1.description }}
+              </div>
+            </div>
+            <div class="compare-divider"><div class="compare-divider-line"></div></div>
+            <div class="compare-city-col">
+              <div class="compare-city-name">
+                {{ comparisonResult.c2.icon }} {{ comparisonResult.c2.cityName }}
+              </div>
+              <div
+                class="compare-temp-val"
+                [style.color]="
+                  comparisonResult.c2.temp >= comparisonResult.c1.temp
+                    ? 'var(--accent)'
+                    : 'var(--text2)'
+                "
+              >
+                {{ comparisonResult.c2.temp }}°C
+              </div>
+              <div
+                style="
+                  font-size: 0.8rem;
+                  color: var(--text2);
+                  text-transform: capitalize;
+                  margin-top: 4px;
+                "
+              >
+                {{ comparisonResult.c2.description }}
+              </div>
+            </div>
+          </div>
+          <div class="compare-rows">
+            <div class="compare-row">
+              <div
+                class="compare-val"
+                [class.winner]="comparisonResult.c1.temp >= comparisonResult.c2.temp"
+              >
+                {{ comparisonResult.c1.temp }}°C
+              </div>
+              <div class="compare-metric">🌡 TEMP</div>
+              <div
+                class="compare-val right"
+                [class.winner]="comparisonResult.c2.temp >= comparisonResult.c1.temp"
+              >
+                {{ comparisonResult.c2.temp }}°C
+              </div>
+            </div>
+            <div class="compare-row">
+              <div
+                class="compare-val"
+                [class.winner]="comparisonResult.c1.humidity >= comparisonResult.c2.humidity"
+              >
+                {{ comparisonResult.c1.humidity }}%
+              </div>
+              <div class="compare-metric">💧 HUMIDITY</div>
+              <div
+                class="compare-val right"
+                [class.winner]="comparisonResult.c2.humidity >= comparisonResult.c1.humidity"
+              >
+                {{ comparisonResult.c2.humidity }}%
+              </div>
+            </div>
+            <div class="compare-row">
+              <div
+                class="compare-val"
+                [class.winner]="comparisonResult.c1.windSpeed >= comparisonResult.c2.windSpeed"
+              >
+                {{ comparisonResult.c1.windSpeed }} km/h
+              </div>
+              <div class="compare-metric">💨 WIND</div>
+              <div
+                class="compare-val right"
+                [class.winner]="comparisonResult.c2.windSpeed >= comparisonResult.c1.windSpeed"
+              >
+                {{ comparisonResult.c2.windSpeed }} km/h
+              </div>
+            </div>
+            <div class="compare-row">
+              <div
+                class="compare-val"
+                [class.winner]="comparisonResult.c1.feelsLike >= comparisonResult.c2.feelsLike"
+              >
+                {{ comparisonResult.c1.feelsLike }}°C
+              </div>
+              <div class="compare-metric">🌡 FEELS LIKE</div>
+              <div
+                class="compare-val right"
+                [class.winner]="comparisonResult.c2.feelsLike >= comparisonResult.c1.feelsLike"
+              >
+                {{ comparisonResult.c2.feelsLike }}°C
+              </div>
+            </div>
+          </div>
+
+          <div class="compare-summary">
+            <div class="compare-summary-title">SUMMARY</div>
+            <div class="compare-summary-items">
+              @if (comparisonResult.c1.temp !== comparisonResult.c2.temp) {
+                <span class="summary-item"
+                  >🔥 <span>{{ comparisonResult.hotterCity.cityName }}</span> is hotter than
+                  {{ comparisonResult.colderCity.cityName }}</span
+                >
+              } @else {
+                <span class="summary-item">🌡 Both cities have the same temperature</span>
+              }
+              @if (comparisonResult.c1.humidity !== comparisonResult.c2.humidity) {
+                <span class="summary-item"
+                  >💧 <span>{{ comparisonResult.moreHumid.cityName }}</span> is more humid</span
+                >
+              }
+              @if (comparisonResult.c1.windSpeed !== comparisonResult.c2.windSpeed) {
+                <span class="summary-item"
+                  >💨 <span>{{ comparisonResult.windier.cityName }}</span> has faster winds</span
+                >
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="page" [class.active]="activeTab === 'log'">
+    <app-activity-log [logs]="logs" (clearLogs)="clearLog()"> </app-activity-log>
+  </div>
+</main>
+
+@if (showRemoveModal) {
+  <div class="modal-overlay">
+    <div class="modal">
+      <div class="modal-title">⚠ City Limit Reached</div>
+      <div class="modal-desc">
+        You have {{ maxCities }} saved cities. Select one to remove before saving
+        <strong>{{ pendingNewCity?.cityName }}</strong
+        >.
+      </div>
+      <div class="modal-list">
+        @for (city of savedCities; track city.cityName; let index = $index) {
+          <div class="modal-city-item" (click)="removeForNew(index)">
+            <div class="modal-city-item-name">
+              {{ city.icon }} {{ city.cityName }}, {{ city.country }}
+            </div>
+            <div class="modal-city-item-temp">{{ city.temp }}°C</div>
+          </div>
+        }
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost btn-sm" (click)="closeModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+}

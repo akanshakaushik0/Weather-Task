@@ -1,0 +1,93 @@
+@if (weather) {
+  @if (mode === 'preview') {
+    <div class="weather-preview show">
+      <div class="wp-top">
+        <div>
+          <div class="wp-city">{{ weather.cityName }}</div>
+          <div class="wp-country">@if (weather.country) { 📍 {{ weather.country }} }</div>
+        </div>
+        <div class="wp-icon">{{ weather.icon }}</div>
+      </div>
+      <div class="wp-temp">{{ weather.temp }}°C</div>
+      <div class="wp-desc">{{ weather.description }}</div>
+      <div class="wp-stats">
+        <div class="wp-stat">
+          <div class="wp-stat-label">💧 Humidity</div>
+          <div class="wp-stat-val">{{ weather.humidity }}%</div>
+        </div>
+        <div class="wp-stat">
+          <div class="wp-stat-label">💨 Wind</div>
+          <div class="wp-stat-val">{{ weather.windSpeed }} km/h</div>
+        </div>
+      </div>
+      <div class="wp-time">Fetched: {{ weather.fetchedAt | date:'medium' }}</div>
+      @if (showActions) {
+        <div class="wp-actions">
+          <button class="btn btn-primary btn-sm" (click)="save.emit()" [disabled]="isSaved">
+            {{ isSaved ? '✅ Already Saved' : '💾 Save City' }}
+          </button>
+        </div>
+      }
+    </div>
+  } @else {
+    <div>
+      <div class="detail-city-header">
+        <div>
+          <div class="detail-city-name">{{ weather.cityName }}, {{ weather.country }}</div>
+          <div class="detail-desc">{{ weather.description }}</div>
+          <div style="margin-top:4px">
+            @if (weather.humidity > 75) { <span class="tag tag-blue">💧 High Humidity</span> }
+            @if (weather.temp > 35) { <span class="tag tag-yellow">🔥 Heat Alert</span> }
+            @if (weather.windSpeed > 50) { <span class="tag tag-blue">💨 Strong Wind</span> }
+            @if (weather.temp < 10) { <span class="tag tag-blue">❄ Cold</span> }
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div class="detail-icon">{{ weather.icon }}</div>
+          <div style="margin-top:8px">
+            <span class="detail-temp-big">{{ weather.temp }}</span><span class="detail-unit">°C</span>
+          </div>
+        </div>
+      </div>
+      <div class="detail-stats">
+        <div class="detail-stat">
+          <div class="detail-stat-icon">💧</div>
+          <div class="detail-stat-label">Humidity</div>
+          <div class="detail-stat-val">{{ weather.humidity }}%</div>
+        </div>
+        <div class="detail-stat">
+          <div class="detail-stat-icon">💨</div>
+          <div class="detail-stat-label">Wind Speed</div>
+          <div class="detail-stat-val">{{ weather.windSpeed }} km/h</div>
+        </div>
+        <div class="detail-stat">
+          <div class="detail-stat-icon">🌡</div>
+          <div class="detail-stat-label">Feels Like</div>
+          <div class="detail-stat-val">{{ weather.feelsLike }}°C</div>
+        </div>
+        <div class="detail-stat">
+          <div class="detail-stat-icon">👁</div>
+          <div class="detail-stat-label">Visibility</div>
+          <div class="detail-stat-val">{{ weather.visibility }} km</div>
+        </div>
+      </div>
+      <div class="detail-time" style="display:flex; justify-content:space-between; align-items:flex-end;">
+        <div>Last updated: {{ weather.fetchedAt | date:'medium' }}</div>
+        @if (showActions) {
+           <div class="wp-actions" style="margin-top:0;">
+             <button class="btn btn-primary" (click)="save.emit()" [disabled]="isSaved">
+               {{ isSaved ? '✅ Already Saved' : '💾 Save City' }}
+             </button>
+           </div>
+        }
+      </div>
+    </div>
+  }
+} @else {
+  @if (mode === 'detail') {
+    <div class="detail-empty">
+      <div style="font-size:3rem">🌐</div>
+      <div style="font-size:0.9rem">Select a saved city<br>to view details</div>
+    </div>
+  }
+}
