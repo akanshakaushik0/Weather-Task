@@ -69,7 +69,7 @@ export class WeatherDashboardComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  // ---------------- STORAGE ----------------
+  
 
   loadFromStorage() {
     try {
@@ -108,7 +108,7 @@ export class WeatherDashboardComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  // ---------------- SEARCH ----------------
+
 
   onSearchCity(city: string) {
     if (this.isSearching) return;
@@ -213,7 +213,7 @@ export class WeatherDashboardComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  // ---------------- REFRESH ----------------
+  
 
   refreshCity(index: number) {
     const city = this.savedCities[index];
@@ -255,7 +255,7 @@ export class WeatherDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ---------------- MODAL ----------------
+  
 
   closeModal() {
     this.showRemoveModal = false;
@@ -273,7 +273,7 @@ export class WeatherDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ---------------- COMPARISON ----------------
+  
 
   updateCompareSelects() {
     if (this.compareCity1 && !this.savedCities.find((c) => c.cityName === this.compareCity1))
